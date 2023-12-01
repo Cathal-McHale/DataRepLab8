@@ -23,6 +23,13 @@ app.use(bodyParser.json());
 // getting-started.js
 const mongoose = require('mongoose');
 
+app.delete('/api/book/:id',async (req, res) => {
+  console.log("Delete: " + req.params.id);
+
+  let book = await bookModel.findByIdAndDelete(req.params.id);
+  res.send(book);
+})
+
 main().catch(err => console.log(err));
 
 async function main() {
@@ -31,53 +38,76 @@ async function main() {
   // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 }
 
+// Define a Mongoose schema for a book with title, cover, and author fields
 const bookSchema = new mongoose.Schema({
-  title:String,
-  cover:String,
-  author:String
+  title: String,
+  cover: String,
+  author: String
 })
 
+// Create a Mongoose model named 'my_books' based on the book schema
 const bookModel = mongoose.model('my_books', bookSchema);
 
-app.put('/api/book/:id', async (req, res)=>{
-  console.log("Update: " +req.params.id);
+// PUT endpoint to update a book by its ID
+app.put('/api/book/:id', async (req, res) => {
+  // Log the update attempt with the book's ID
+  console.log("Update: " + req.params.id);
 
-  let book = await bookModel.findByIdAndUpdate(req.params.id, req.body, {new: true});
+  // Find the book by ID and update its content with the request body data
+  let book = await bookModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  
+  // Send the updated book as a response
   res.send(book);
 })
 
+// POST endpoint to create a new book
+app.post('/api/book', (req, res) => {
+  // Log the data received in the request body
+  console.log(req.body);
 
-
-app.post('/api/book', (req,res)=>{
-    console.log(req.body);
-
-    bookModel.create({
-      title:req.body.title,
-      cover:req.body.cover,
-      author:req.body.author
-    })
-    .then(()=>{ res.send("Book Created")})
-    .catch(()=>{ res.send("Book NOT Created")});
-
+  // Create a new book in the database using the data from the request body
+  bookModel.create({
+    title: req.body.title,
+    cover: req.body.cover,
+    author: req.body.author
+  })
+  .then(() => { 
+    // Send a success message if the book is created
+    res.send("Book Created");
+  })
+  .catch(() => { 
+    // Send an error message if the book creation fails
+    res.send("Book NOT Created");
+  });
 })
 
+// Default route to respond with 'Hello World!'
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-app.get('/api/books', async(req, res)=>{
-    
+// GET endpoint to retrieve all books from the database
+app.get('/api/books', async (req, res) => {
+  // Retrieve all books from the database
   let books = await bookModel.find({});
+  
+  // Send the list of books as a JSON response
   res.json(books);
 })
 
-app.get('/api/book/:identifier',async (req,res)=>{
+// GET endpoint to retrieve a single book by its ID
+app.get('/api/book/:identifier', async (req, res) => {
+  // Log the book ID requested
   console.log(req.params.identifier);
 
+  // Find the book by ID in the database
   let book = await bookModel.findById(req.params.identifier);
+  
+  // Send the found book as a response
   res.send(book);
 })
 
+// Start the app and make it listen on the specified port
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
